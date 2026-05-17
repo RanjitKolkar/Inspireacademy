@@ -6,6 +6,288 @@ import json
 # =========================================================
 # LOAD CONFIG
 # =========================================================
+CONFIG_FILE = "config.json"
+
+# Create default config if not exists
+if not os.path.exists(CONFIG_FILE):
+
+    default_config = {
+        "university_name": "Inspire Academy Haliyal",
+        "username": "admin",
+        "password": "admin123"
+    }
+
+    with open(CONFIG_FILE, "w") as f:
+        json.dump(default_config, f, indent=4)
+
+# Load config
+with open(CONFIG_FILE, "r") as f:
+    CONFIG = json.load(f)
+
+APP_NAME = CONFIG["university_name"]
+USERNAME = CONFIG["username"]
+PASSWORD = CONFIG["password"]
+
+# =========================================================
+# FILES
+# =========================================================
+DATA_FILE = "student_fee_data.xlsx"
+TEMPLATE_FILE = "student_template.xlsx"
+
+# =========================================================
+# PAGE CONFIG
+# =========================================================
+st.set_page_config(
+    page_title=APP_NAME,
+    page_icon="📚",
+    layout="wide"
+)
+
+# =========================================================
+# MOBILE RESPONSIVE CSS
+# =========================================================
+st.markdown("""
+<style>
+
+/* ==============================
+MAIN APP
+============================== */
+.main {
+    background-color: #f4f7fc;
+    padding: 0rem 1rem;
+}
+
+/* ==============================
+TITLE
+============================== */
+.title-box {
+    background: linear-gradient(90deg,#1565C0,#43A047);
+    padding: 18px;
+    border-radius: 15px;
+    text-align: center;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.title-box h1 {
+    font-size: 2rem;
+}
+
+.title-box h3 {
+    font-size: 1rem;
+}
+
+/* ==============================
+BUTTONS
+============================== */
+.stButton>button {
+    width: 100%;
+    background-color: #1565C0;
+    color: white;
+    border-radius: 10px;
+    font-weight: bold;
+    border: none;
+    height: 45px;
+}
+
+.stDownloadButton>button {
+    width: 100%;
+    border-radius: 10px;
+    height: 45px;
+    font-weight: bold;
+}
+
+/* ==============================
+INPUTS
+============================== */
+.stTextInput input,
+.stNumberInput input,
+.stSelectbox div[data-baseweb="select"] {
+    border-radius: 10px;
+}
+
+/* ==============================
+DATAFRAME
+============================== */
+[data-testid="stDataFrame"] {
+    overflow-x: auto;
+}
+
+/* ==============================
+METRICS
+============================== */
+[data-testid="metric-container"] {
+    background-color: white;
+    border-radius: 15px;
+    padding: 15px;
+    box-shadow: 0px 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ==============================
+MOBILE RESPONSIVE
+============================== */
+@media (max-width: 768px) {
+
+    .block-container {
+        padding-top: 1rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+
+    .title-box {
+        padding: 15px;
+    }
+
+    .title-box h1 {
+        font-size: 1.5rem;
+    }
+
+    .title-box h3 {
+        font-size: 0.9rem;
+    }
+
+    h1, h2, h3 {
+        font-size: 1.1rem !important;
+    }
+
+    .stButton>button {
+        height: 42px;
+        font-size: 14px;
+    }
+
+    div[data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        margin-bottom: 10px;
+    }
+
+    table {
+        font-size: 12px;
+    }
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =========================================================
+# CREATE TEMPLATE FILE
+# =========================================================
+if not os.path.exists(TEMPLATE_FILE):
+
+    template_df = pd.DataFrame({
+        "Number": [1],
+        "Name": ["Student Name"],
+        "Class": ["Class"]
+    })
+
+    template_df.to_excel(TEMPLATE_FILE, index=False)
+
+# =========================================================
+# FUNCTIONS
+# =========================================================
+def create_empty_data():
+
+    df = pd.DataFrame(columns=[
+        "Number",
+        "Name",
+        "Class",
+        "Fee Paid"
+    ])
+
+    df.to_excel(DATA_FILE, index=False)
+
+    return df
+
+
+def load_data():
+
+    if os.path.exists(DATA_FILE):
+        return pd.read_excel(DATA_FILE)
+
+    return create_empty_data()
+
+
+def save_data(df):
+
+    df.to_excel(DATA_FILE, index=False)
+
+
+# =========================================================
+# LOGIN SESSION
+# =========================================================
+if "logged_in" not in st.session_state:
+    st.session_state.logged_in = False
+
+# =========================================================
+# LOGIN PAGE
+# =========================================================
+if not st.session_state.logged_in:
+
+    st.markdown(f"""
+    <div class="title-box">
+        <h1>📚 {APP_NAME}</h1>
+        <h3>Admin Login</h3>
+    </div>
+    """, unsafe_allow_html=True)
+
+    username = st.text_input("Username")
+
+    password = st.text_input(
+        "Password",
+        type="password"
+    )
+
+    if st.button("Login"):
+
+        if username == USERNAME and password == PASSWORD:
+
+            st.session_state.logged_in = True
+
+            st.success("Login Successful")
+
+            st.rerun()
+
+        else:
+            st.error("Invalid Username or Password")
+
+    st.stop()
+
+# =========================================================
+# LOAD DATA
+# =========================================================
+df = load_data()
+
+# =========================================================
+# HEADER
+# =========================================================
+st.markdown(f"""
+<div class="title-box">
+    <h1>📚 {APP_NAME}</h1>
+    <h3>Tuition Fee Collection & Tracking System</h3>
+</div>
+""", unsafe_allow_html=True)
+
+# =========================================================
+# SIDEBAR MENU
+# =========================================================
+st.sidebar.title("📋 Menu")
+
+menu = st.sidebar.radio(
+    "Select Option",
+    [
+        "Config",
+        "Import",
+        "Track",
+        "Report"
+    ]
+)
+
+if st.sidebar.button("Logout"):
+
+    st.session_state.logged_in = False
+
+    st.rerun()
+
 # =========================================================
 # CONFIG MENU
 # =========================================================
@@ -43,7 +325,8 @@ if menu == "Config":
                 "password": admin_password
             }
 
-            with open("config.json", "w") as f:
+            with open(CONFIG_FILE, "w") as f:
+
                 json.dump(
                     updated_config,
                     f,
@@ -55,323 +338,14 @@ if menu == "Config":
             )
 
             st.info(
-                "Please refresh/reload the app to apply changes."
+                "Please refresh/reload the app."
             )
 
     st.divider()
 
     st.subheader("📥 Download Template")
 
-    with open("student_template.xlsx", "rb") as file:
-
-        st.download_button(
-            label="Download Excel Template",
-            data=file,
-            file_name="student_template.xlsx"
-        )
-# =========================================================
-# PAGE CONFIG
-# =========================================================
-st.set_page_config(
-    page_title=APP_NAME,
-    page_icon="📚",
-    layout="wide"
-)
-
-# =========================================================
-# CUSTOM CSS
-# =========================================================
-# ADD THIS CSS BELOW st.set_page_config()
-
-st.markdown("""
-<style>
-
-/* ==============================
-   MAIN APP
-============================== */
-.main {
-    background-color: #f4f7fc;
-    padding: 0rem 1rem;
-}
-
-/* ==============================
-   TITLE
-============================== */
-.title-box {
-    background: linear-gradient(90deg,#1565C0,#43A047);
-    padding: 18px;
-    border-radius: 15px;
-    text-align: center;
-    color: white;
-    margin-bottom: 20px;
-}
-
-.title-box h1 {
-    font-size: 2rem;
-}
-
-.title-box h3 {
-    font-size: 1rem;
-}
-
-/* ==============================
-   BUTTONS
-============================== */
-.stButton>button {
-    width: 100%;
-    background-color: #1565C0;
-    color: white;
-    border-radius: 10px;
-    font-weight: bold;
-    border: none;
-    height: 45px;
-}
-
-.stDownloadButton>button {
-    width: 100%;
-    border-radius: 10px;
-    height: 45px;
-    font-weight: bold;
-}
-
-/* ==============================
-   INPUTS
-============================== */
-.stTextInput input,
-.stNumberInput input,
-.stSelectbox div[data-baseweb="select"] {
-    border-radius: 10px;
-}
-
-/* ==============================
-   DATAFRAME
-============================== */
-[data-testid="stDataFrame"] {
-    overflow-x: auto;
-}
-
-/* ==============================
-   METRICS
-============================== */
-[data-testid="metric-container"] {
-    background-color: white;
-    border-radius: 15px;
-    padding: 15px;
-    box-shadow: 0px 2px 8px rgba(0,0,0,0.08);
-}
-
-/* ==============================
-   MOBILE RESPONSIVE
-============================== */
-@media (max-width: 768px) {
-
-    .block-container {
-        padding-top: 1rem;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-    }
-
-    .title-box {
-        padding: 15px;
-    }
-
-    .title-box h1 {
-        font-size: 1.5rem;
-    }
-
-    .title-box h3 {
-        font-size: 0.9rem;
-    }
-
-    h1, h2, h3 {
-        font-size: 1.1rem !important;
-    }
-
-    .stButton>button {
-        height: 42px;
-        font-size: 14px;
-    }
-
-    .stDownloadButton>button {
-        height: 42px;
-        font-size: 14px;
-    }
-
-    /* STACK COLUMNS */
-    div[data-testid="column"] {
-        width: 100% !important;
-        flex: 1 1 100% !important;
-        margin-bottom: 10px;
-    }
-
-    /* METRICS */
-    [data-testid="metric-container"] {
-        padding: 10px;
-    }
-
-    /* TABLE */
-    table {
-        font-size: 12px;
-    }
-
-    /* SIDEBAR */
-    section[data-testid="stSidebar"] {
-        width: 240px !important;
-    }
-}
-
-/* ==============================
-   EXTRA SMALL DEVICES
-============================== */
-@media (max-width: 480px) {
-
-    .title-box h1 {
-        font-size: 1.2rem;
-    }
-
-    .title-box h3 {
-        font-size: 0.8rem;
-    }
-
-    .stTextInput input,
-    .stNumberInput input {
-        font-size: 14px;
-    }
-
-    table {
-        font-size: 11px;
-    }
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# =========================================================
-# LOGIN
-# =========================================================
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-
-if not st.session_state.logged_in:
-
-    st.markdown(f"""
-    <div class="title-box">
-        <h1>📚 {APP_NAME}</h1>
-        <h3>Admin Login</h3>
-    </div>
-    """, unsafe_allow_html=True)
-
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
-
-    if st.button("Login"):
-
-        if username == USERNAME and password == PASSWORD:
-
-            st.session_state.logged_in = True
-            st.success("Login Successful")
-            st.rerun()
-
-        else:
-            st.error("Invalid Username or Password")
-
-    st.stop()
-
-# =========================================================
-# FUNCTIONS
-# =========================================================
-def create_empty_data():
-
-    df = pd.DataFrame(columns=[
-        "Number",
-        "Name",
-        "Class",
-        "Fee Paid"
-    ])
-
-    df.to_excel(DATA_FILE, index=False)
-
-    return df
-
-
-def load_data():
-
-    if os.path.exists(DATA_FILE):
-        return pd.read_excel(DATA_FILE)
-
-    return create_empty_data()
-
-
-def save_data(df):
-
-    df.to_excel(DATA_FILE, index=False)
-
-
-# =========================================================
-# LOAD DATA
-# =========================================================
-df = load_data()
-
-# =========================================================
-# HEADER
-# =========================================================
-st.markdown(f"""
-<div class="title-box">
-    <h1>📚 {APP_NAME}</h1>
-    <h3>Tuition Fee Collection & Tracking System</h3>
-</div>
-""", unsafe_allow_html=True)
-
-# =========================================================
-# SIDEBAR MENU
-# =========================================================
-st.sidebar.title("📋 Menu")
-
-menu = st.sidebar.radio(
-    "Select Option",
-    [
-        "Config",
-        "Import",
-        "Track",
-        "Report"
-    ]
-)
-
-if st.sidebar.button("Logout"):
-
-    st.session_state.logged_in = False
-    st.rerun()
-
-# =========================================================
-# CONFIG MENU
-# =========================================================
-if menu == "Config":
-
-    st.subheader("⚙️ Application Configuration")
-
-    config_df = pd.DataFrame({
-        "Setting": [
-            "University Name",
-            "Username",
-            "Password"
-        ],
-        "Value": [
-            APP_NAME,
-            USERNAME,
-            PASSWORD
-        ]
-    })
-
-    st.dataframe(
-        config_df,
-        use_container_width=True
-    )
-
-    st.info("Edit config.json file manually to update settings.")
-
-    st.subheader("📥 Download Template")
-
-    with open("student_template.xlsx", "rb") as file:
+    with open(TEMPLATE_FILE, "rb") as file:
 
         st.download_button(
             label="Download Excel Template",
@@ -422,6 +396,7 @@ elif menu == "Import":
             st.success("Data Imported Successfully")
 
         else:
+
             st.error(
                 "Excel must contain Number, Name, Class columns"
             )
@@ -433,9 +408,9 @@ elif menu == "Track":
 
     st.subheader("💰 Track & Manage Fees")
 
-    # -----------------------------------------------------
+    # =====================================================
     # ADD STUDENT
-    # -----------------------------------------------------
+    # =====================================================
     st.subheader("➕ Add Student")
 
     with st.form("add_student_form"):
@@ -455,7 +430,9 @@ elif menu == "Track":
             ["Yes", "No"]
         )
 
-        submit = st.form_submit_button("Add Student")
+        submit = st.form_submit_button(
+            "Add Student"
+        )
 
         if submit:
 
@@ -474,13 +451,14 @@ elif menu == "Track":
             save_data(df)
 
             st.success("Student Added Successfully")
+
             st.rerun()
 
     st.divider()
 
-    # -----------------------------------------------------
+    # =====================================================
     # SEARCH
-    # -----------------------------------------------------
+    # =====================================================
     search = st.text_input(
         "🔍 Search Student"
     )
@@ -500,9 +478,9 @@ elif menu == "Track":
             )
         ]
 
-    # -----------------------------------------------------
-    # CRUD OPERATIONS
-    # -----------------------------------------------------
+    # =====================================================
+    # CRUD
+    # =====================================================
     st.subheader("📝 CRUD Operations")
 
     if not filtered_df.empty:
@@ -556,7 +534,7 @@ elif menu == "Track":
                     save_data(df)
 
                     st.success(
-                        f"{updated_name} Updated Successfully"
+                        f"{updated_name} Updated"
                     )
 
                     st.rerun()
@@ -578,6 +556,7 @@ elif menu == "Track":
                     st.rerun()
 
     else:
+
         st.warning("No Records Found")
 
 # =========================================================
@@ -626,9 +605,9 @@ elif menu == "Report":
         height=500
     )
 
-    # -----------------------------------------------------
-    # DOWNLOAD
-    # -----------------------------------------------------
+    # =====================================================
+    # DOWNLOAD DATABASE
+    # =====================================================
     st.subheader("📥 Download Database")
 
     with open(DATA_FILE, "rb") as file:
@@ -641,9 +620,9 @@ elif menu == "Report":
 
     st.divider()
 
-    # -----------------------------------------------------
+    # =====================================================
     # CLEAR DATA
-    # -----------------------------------------------------
+    # =====================================================
     st.subheader("⚠️ Danger Zone")
 
     confirm = st.checkbox(
@@ -656,6 +635,8 @@ elif menu == "Report":
 
             create_empty_data()
 
-            st.success("All Data Cleared Successfully")
+            st.success(
+                "All Data Cleared Successfully"
+            )
 
             st.rerun()
