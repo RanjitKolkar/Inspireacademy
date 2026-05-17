@@ -6,15 +6,69 @@ import json
 # =========================================================
 # LOAD CONFIG
 # =========================================================
-with open("config.json", "r") as f:
-    CONFIG = json.load(f)
+# =========================================================
+# CONFIG MENU
+# =========================================================
+if menu == "Config":
 
-APP_NAME = CONFIG["university_name"]
-USERNAME = CONFIG["username"]
-PASSWORD = CONFIG["password"]
+    st.subheader("⚙️ Application Configuration")
 
-DATA_FILE = "student_fee_data.xlsx"
+    with st.form("config_form"):
 
+        university_name = st.text_input(
+            "University / Academy Name",
+            value=APP_NAME
+        )
+
+        admin_username = st.text_input(
+            "Admin Username",
+            value=USERNAME
+        )
+
+        admin_password = st.text_input(
+            "Admin Password",
+            value=PASSWORD,
+            type="password"
+        )
+
+        save_config = st.form_submit_button(
+            "💾 Save Configuration"
+        )
+
+        if save_config:
+
+            updated_config = {
+                "university_name": university_name,
+                "username": admin_username,
+                "password": admin_password
+            }
+
+            with open("config.json", "w") as f:
+                json.dump(
+                    updated_config,
+                    f,
+                    indent=4
+                )
+
+            st.success(
+                "Configuration Updated Successfully"
+            )
+
+            st.info(
+                "Please refresh/reload the app to apply changes."
+            )
+
+    st.divider()
+
+    st.subheader("📥 Download Template")
+
+    with open("student_template.xlsx", "rb") as file:
+
+        st.download_button(
+            label="Download Excel Template",
+            data=file,
+            file_name="student_template.xlsx"
+        )
 # =========================================================
 # PAGE CONFIG
 # =========================================================
